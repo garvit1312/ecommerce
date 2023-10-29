@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* Your existing CSS styles */
+    </style>
+</head>
+
+<body>
+    <section id="form-section">
+        <form id="inner-form" onsubmit="saveOnLocal(event)">
+            <div id="msg"></div>
+            <label for="itemname">itemname:</label>
+            <input type="text" name="itemname" id="name">
+            
+            <label for="itemprice">itemprice</label>
+            <input type="text" name="itemprice" id="price">
+            <input type="submit" id="btn" value="submit">
+        </form>
+
+        <!-- Add this div to display the total price -->
+        <div id="total"></div>
+
+        <ul id="users">
+           
+        </ul>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+
+    <script>
+        let totalPrice = 0; // Initialize total price
+
+        function saveOnLocal(event) {
+            event.preventDefault();
+            const itemname = event.target.itemname.value;
+            const itemprice = parseFloat(event.target.itemprice.value); // Convert price to float
+
+            const obj = {
+                itemname,
+                itemprice
+            };
+
+            const data = axios.post("https://crudcrud.com/api/6aaa7c432c164e359422df51968c1f80/addUser", obj)
+                .then((response) => {
+                    showOnDisplay(response.data);
+                    // No need to update total price here since it will be updated in showOnDisplay
+                })
+                .catch((err) => console.log(err));
+        }
+
+        // Add this function to display the total price
+        function displayTotalPrice() {
+            const totalDisplay = document.getElementById('total');
+            totalDisplay.textContent = `Total Price: $${totalPrice.toFixed(2)}`;
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            const data = axios.get("https://crudcrud.com/api/6aaa7c432c164e359422df51968c1f80/addUser")
+                .then((response) => {
+                    for (var i = 0; i < response.data.length; i++) {
+                        showOnDisplay(response.data[i]);
+                    }
+                });
+        });
+
+        function showOnDisplay(obj) {
+            const users = document.getElementById('users');
+            const li = document.createElement('li');
+
+            li.textContent = `${obj.itemname}  ${obj.itemprice}`;
+
+            const button = document.createElement('button');
+            button.textContent = "Delete";
+            li.appendChild(button);
+            users.appendChild(li);
+
+            // Update the total price with each item's price
+            totalPrice += parseFloat(obj.itemprice);
+            displayTotalPrice(); // Call function to display total price
+
+            button.onclick = () => {
+                const id = obj._id;
+                axios.delete(`https://crudcrud.com/api/6aaa7c432c164e359422df51968c1f80/addUser/${id}`)
+                    .then((response) => {
+                        console.log(response);
+                    })
+                    .catch((err) => console.log(err))
+
+                users.removeChild(li);
+                // Update the total price when an item is deleted
+                totalPrice -= parseFloat(obj.itemprice);
+                displayTotalPrice(); // Call function to display total price
+            }
+        }
+    </script>
+</body>
+
+</html>
