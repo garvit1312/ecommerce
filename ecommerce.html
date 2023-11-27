@@ -16,18 +16,18 @@
             <div id="msg"></div>
             <label for="itemname">itemname:</label>
             <input type="text" name="itemname" id="name">
-            
+
             <label for="itemprice">itemprice</label>
             <input type="text" name="itemprice" id="price">
             <input type="submit" id="btn" value="submit">
         </form>
 
-        <!-- Add this div to display the total price -->
-        <div id="total"></div>
-
         <ul id="users">
-           
+            <h2>PRODUCTS</h2>
         </ul>
+
+        <!-- Display the total price initially -->
+        <div id="total">Total Price: $0.00</div>
     </section>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
@@ -35,7 +35,13 @@
     <script>
         let totalPrice = 0; // Initialize total price
 
-        function saveOnLocal(event) {
+        // Function to display the total price
+        function displayTotalPrice() {
+            const totalDisplay = document.getElementById('total');
+            totalDisplay.textContent = `Total Price: $${totalPrice.toFixed(2)}`;
+        }
+
+        async function saveOnLocal(event) {
             event.preventDefault();
             const itemname = event.target.itemname.value;
             const itemprice = parseFloat(event.target.itemprice.value); // Convert price to float
@@ -45,27 +51,23 @@
                 itemprice
             };
 
-            const data = axios.post("https://crudcrud.com/api/6aaa7c432c164e359422df51968c1f80/addUser", obj)
-                .then((response) => {
-                    showOnDisplay(response.data);
-                    // No need to update total price here since it will be updated in showOnDisplay
-                })
-                .catch((err) => console.log(err));
+            try {
+                const response = await axios.post("https://crudcrud.com/api/d1cc30d32c314d09802124d8fcd68f5d/addUser", obj);
+                showOnDisplay(response.data);
+            } catch (err) {
+                console.log(err);
+            }
         }
 
-        // Add this function to display the total price
-        function displayTotalPrice() {
-            const totalDisplay = document.getElementById('total');
-            totalDisplay.textContent = `Total Price: $${totalPrice.toFixed(2)}`;
-        }
-
-        window.addEventListener("DOMContentLoaded", () => {
-            const data = axios.get("https://crudcrud.com/api/6aaa7c432c164e359422df51968c1f80/addUser")
-                .then((response) => {
-                    for (var i = 0; i < response.data.length; i++) {
-                        showOnDisplay(response.data[i]);
-                    }
-                });
+        window.addEventListener("DOMContentLoaded", async function () {
+            try {
+                const response = await axios.get("https://crudcrud.com/api/d1cc30d32c314d09802124d8fcd68f5d/addUser");
+                for (let i = 0; i < response.data.length; i++) {
+                    showOnDisplay(response.data[i]);
+                }
+            } catch (err) {
+                console.log(err);
+            }
         });
 
         function showOnDisplay(obj) {
@@ -83,21 +85,23 @@
             totalPrice += parseFloat(obj.itemprice);
             displayTotalPrice(); // Call function to display total price
 
-            button.onclick = () => {
+            button.onclick = async function () {
                 const id = obj._id;
-                axios.delete(`https://crudcrud.com/api/6aaa7c432c164e359422df51968c1f80/addUser/${id}`)
-                    .then((response) => {
-                        console.log(response);
-                    })
-                    .catch((err) => console.log(err))
+                try {
+                    await axios.delete(`https://crudcrud.com/api/d1cc30d32c314d09802124d8fcd68f5d/addUser/${id}`);
+                    console.log("Item deleted successfully");
+                } catch (err) {
+                    console.log(err);
+                }
 
                 users.removeChild(li);
                 // Update the total price when an item is deleted
                 totalPrice -= parseFloat(obj.itemprice);
                 displayTotalPrice(); // Call function to display total price
-            }
+            };
         }
     </script>
 </body>
 
 </html>
+
